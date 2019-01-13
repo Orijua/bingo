@@ -17,7 +17,7 @@ public class Bingo {
 	/**
 	 * @param args the command line arguments
 	 */
-	
+
 	public static void main(String[] args) {
 		int[][] carton = new int[3][9];
 		int[] bombo = new int[90];
@@ -45,7 +45,7 @@ public class Bingo {
 						System.out.println("¡Has hech línea!");
 						cantarLinea++;
 					}
-					bingo(carton);					
+					bingo(carton);
 					respuesta = SiNo("Siguiente número (s/n)?", 's', 'n');
 					contador++;
 				} while (respuesta == 's' && bingo(carton) == false);
