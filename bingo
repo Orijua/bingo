@@ -3,140 +3,242 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package bingo;
+package Bingo;
 
 import java.util.Random;
 import java.util.Scanner;
 
 /**
  *
- * @author oriol
+ * @author Oriol
  */
 public class Bingo {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        int[][] carton = new int[3][9];
-        int[] bombo = new int[90];
-        boolean partida;
+	/**
+	 * @param args the command line arguments
+	 */
+	
+	public static void main(String[] args) {
+		int[][] carton = new int[3][9];
+		int[] bombo = new int[90];
+		boolean partida = true;
+		boolean juego = true;
+		char respuesta;
+		int numeroPedido;
 
-        do {
-            CartonModificado(carton);
-            pedirNumero(carton, bombo);
+		do {
+			carton = CartonModificado(carton);
+			int contador = 0;
+			int cantarLinea = 0;
+			do {
+				mostrarCarton(carton);
+				do {
+					numeroPedido = bombo(bombo);
+					bombo[contador] = numeroPedido;
 
-            crearBombo(bombo);
-            darNumeroBombo(bombo);
-            partida = seguirJugando();
+					System.out.println("El nuevo número és: " + numeroPedido);
+					if (numeroEncontrado(numeroPedido, carton) == true) {
+						System.out.println("Este número estaba en tu carton. Te lo marco como X.");
+					}
+					mostrarCarton(carton);
+					if (comprovarLinea(carton) == true && cantarLinea == 0) {
+						System.out.println("¡Has hech línea!");
+						cantarLinea++;
+					}
+					bingo(carton);					
+					respuesta = SiNo("Siguiente número (s/n)?", 's', 'n');
+					contador++;
+				} while (respuesta == 's' && bingo(carton) == false);
+				mostrarBombo(bombo);
+				partida = false;
+			} while (partida == true && bingo(carton) == false);
+			juego = seguirJugando();
+		} while (juego == true);
 
-        } while (partida);
-    }
+	}
 
-    public static boolean seguirJugando() {
-        char respuesta;
+	public static boolean seguirJugando() {
+		char respuesta;
 
-        respuesta = SiNo("Quieres seguir jugando(s/n)?", 's', 'n');
-        if (respuesta == 'n') {
-            return false;
-        } else {
-            return true;
-        }
-    }
+		respuesta = SiNo("Quieres seguir jugando(s/n)?", 's', 'n');
+		if (respuesta == 'n') {
+			return false;
+		} else {
+			return true;
+		}
+	}
 
-    public static void pedirNumero(int[][] carton, int[] bombo) {
-        Random rd = new Random();
-        char respuesta;
+	public static int[][] CartonModificado(int[][] carton) {
+		Random rd = new Random();
+		int[] numerosAleatorios = new int[27];
+		int vueltas = numerosAleatorios.length - 1, aux = 0;
+		boolean ordenado = false;
 
-        do {
-            mostrarCarton(carton);
-            System.out.println("\nNuevo numero: " + darNumeroBombo(bombo));
-            respuesta = SiNo("Siguiente numero (s/n)?", 's', 'n');
+//Rellena un array de numeros aleatorios sin repetir
+		boolean repetido;
+		int numeroAceptado;
+		int contador = 0;
+		do {
+			do {
+				repetido = false;
+				numeroAceptado = rd.nextInt(89) + 1;
+				for (int i = 0; i < numerosAleatorios.length; i++) {
+					if (numeroAceptado == numerosAleatorios[i]) {
+						repetido = true;
+					}
+				}
+			} while (repetido == true);
+			numerosAleatorios[contador] = numeroAceptado;
+			contador++;
+		} while (contador < 27);
 
-        } while (respuesta == 's');
+//Ordena el array
+		while (vueltas > 0 && ordenado == false) {
 
-    }
+			ordenado = true;
 
-    public static int[][] crearCarton(int[][] carton) {
-        for (int i = 0; i < carton.length; i++) {
-            for (int j = 0; j < carton[i].length; j++) {
-                carton[i][j] = 0;
-            }
-        }
-        return carton;
-    }
+			for (int pos = 0; pos < vueltas; pos++) {
 
-    public static void CartonModificado(int[][] carton) {
-        Random rd = new Random();
-        boolean igual = false;
-        int contador = 0, numeroAleatorio = rd.nextInt(9);
-        carton = crearCarton(carton);
+				if (numerosAleatorios[pos] > numerosAleatorios[pos + 1]) {
+					aux = numerosAleatorios[pos];
+					numerosAleatorios[pos] = numerosAleatorios[pos + 1];
+					numerosAleatorios[pos + 1] = aux;
+					ordenado = false;
+				}
+			}
+			vueltas--;
+		}
 
-        for (int i = 0; i < carton.length;) {
-            if (contador == 5) {
-                contador = 0;
-                i++;
-            } else if (carton[i][numeroAleatorio] == 0) {
-                carton[i][numeroAleatorio] = rd.nextInt(89) + 1;
-                while (igual == false) {
-                    for (int j = 0; j < carton.length; j++) {
-                        for (int k = 0; k < carton[j].length; k++) {
-                            if (carton[i][numeroAleatorio] == carton[j][k]) {
-                                carton[j][k] = rd.nextInt(89) + 1;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+//Relleno el array bidimensional con el array creado anteriormente.
+		int contadorNumerosCarton = 0;
+		for (int i = 0; i < carton[0].length; i++) {
+			for (int j = 0; j < carton.length; j++) {
+				if (contadorNumerosCarton <= 27) {
+					carton[j][i] = numerosAleatorios[contadorNumerosCarton];
+					contadorNumerosCarton++;
+				}
+			}
+		}
 
-    public static void mostrarCarton(int carton[][]) {
-        for (int i = 0; i < carton.length; i++) {
-            for (int j = 0; j < carton[i].length; j++) {
-                if (carton[i][j] == 0) {
-                    System.out.printf("  @ ");
-                } else {
-                    System.out.printf("%3d ", carton[i][j]);
-                }
-            }
-            System.out.println();
-        }
-    }
+//Relleno los 4 espacios de cada línea en blanco.
+		for (int i = 0; i < carton.length; i++) {
+			int contadorNumerosAleatorio = 0;
+			for (int j = 0; j < carton[0].length; j++) {
+				if (contadorNumerosAleatorio < 4) {
+					int numeroAleatorio = rd.nextInt(9);
+					if (carton[i][numeroAleatorio] != 0) {
+						carton[i][numeroAleatorio] = 0;
+						contadorNumerosAleatorio++;
+					}
+				}
+			}
+		}
 
-    public static int[] crearBombo(int[] bombo) {
-        int listado = 0;
+		return carton;
+	}
 
-        for (int i = 0; i < bombo.length; i++) {
-            listado += 1;
-            bombo[i] = listado;
-        }
-        return bombo;
-    }
+	public static void mostrarCarton(int[][] carton) {
 
-    public static int darNumeroBombo(int[] bombo) {
-        Random rd = new Random();
-        int numeroEnviar, numeroAleatorio;
+		for (int i = 0; i < carton.length; i++) {
+			for (int j = 0; j < carton[i].length; j++) {
+				if (carton[i][j] == 0) {
+					System.out.printf("  @ ");
+				} else if (carton[i][j] == -1) {
+					System.out.printf("  X ");
+				} else {
+					System.out.printf("%3d ", carton[i][j]);
+				}
+			}
+			System.out.println();
+		}
+	}
 
-        bombo = crearBombo(bombo);
-        numeroAleatorio = rd.nextInt(89) + 1;
-        numeroEnviar = bombo[numeroAleatorio];
-        bombo[numeroAleatorio] = 0;
+	public static int bombo(int[] bombo) {
+		Random rd = new Random();
 
-        return bombo[numeroEnviar] - 1;
-    }
+		boolean repetido;
+		int numeroPedido;
 
-    public static char SiNo(String frase, char caracter1, char caracter2) {
-        Scanner sc = new Scanner(System.in);
+//Enviar número no repetido		
+		do {
+			repetido = false;
+			numeroPedido = rd.nextInt(89) + 1;
+			for (int i = 0; i < bombo.length; i++) {
+				if (numeroPedido == bombo[i]) {
+					repetido = true;
+				}
+			}
+		} while (repetido == true);
 
-        System.out.println(frase);
-        char caracter = sc.next().charAt(0);
+		return numeroPedido;
+	}
 
-        while (caracter != caracter1 && caracter != caracter2) {
-            System.out.println(frase);
-            caracter = sc.next().charAt(0);
-        }
+	public static boolean numeroEncontrado(int numeroBombo, int[][] carton) {
+		for (int i = 0; i < carton[0].length; i++) {
+			for (int j = 0; j < carton.length; j++) {
+				if (carton[j][i] == numeroBombo) {
+					carton[j][i] = -1;
+					return true;
+				} else if (carton[j][i] > numeroBombo) {
+					return false;
+				}
+			}
+		}
+		return false;
+	}
 
-        return caracter;
-    }
+	public static void mostrarBombo(int[] bombo) {
+		for (int i = 0; i < bombo.length; i++) {
+			if (bombo[i] != 0) {
+				System.out.printf("%d ", bombo[i]);
+			}
+		}
+		System.out.println();
+	}
+
+	public static boolean comprovarLinea(int[][] carton) {
+		for (int i = 0; i < carton.length; i++) {
+			int contadorLinea = 0;
+			for (int j = 0; j < carton[i].length; j++) {
+				if (carton[i][j] == 0 || carton[i][j] == -1) {
+					contadorLinea++;
+				}
+				if (contadorLinea == 9) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static boolean bingo(int[][] carton) {
+		int ContadorBingo = 0;
+		for (int i = 0; i < carton.length; i++) {
+			for (int j = 0; j < carton[i].length; j++) {
+				if (carton[i][j] == -1) {
+					ContadorBingo++;
+				}
+				if (ContadorBingo == 15) {
+					System.out.println("¡Has hecho BINGO!");
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static char SiNo(String frase, char caracter1, char caracter2) {
+		Scanner sc = new Scanner(System.in);
+
+		System.out.println(frase);
+		char caracter = sc.next().charAt(0);
+
+		while (caracter != caracter1 && caracter != caracter2) {
+			System.out.println(frase);
+			caracter = sc.next().charAt(0);
+		}
+
+		return caracter;
+	}
+
 }
